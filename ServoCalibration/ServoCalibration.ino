@@ -1,7 +1,3 @@
-#include <RobotIRremoteInt.h>
-#include <RobotIRremote.h>
-#include <RobotIRremoteTools.h>
-
 /*************************************************** 
   This is an example for our Adafruit 16-channel PWM & Servo driver
   Servo test - this will drive 16 servos, one after the other
@@ -24,7 +20,9 @@
 #include <Adafruit_PWMServoDriver.h>
 
 // called this way, it uses the default address 0x40
-Adafruit_PWMServoDriver hip, shoulder(0x41), elbow(0x42);
+Adafruit_PWMServoDriver hip;
+Adafruit_PWMServoDriver shoulder(0x41);
+Adafruit_PWMServoDriver elbow(0x42);
 // you can also call it with a different address you want
 //Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x41);
 
@@ -68,36 +66,26 @@ int elbowMaxes[] = {
    526, 538, 506, 515
 };
 
-void servosToHome()
+void hipsToHome()
 {
   for(int i = 0; i < 4; i++) {
     hip.setPWM(i, 0, hipCenters[i]);
+  }
+}
+
+void shouldersToHome()
+{
+  for(int i = 0; i < 4; i++) {
     shoulder.setPWM(i, 0, shoulderCenters[i]);
+  }
+}
+
+void elbowsToHome()
+{
+  for(int i = 0; i < 4; i++) {
     elbow.setPWM(i, 0, elbowCenters[i]);
   }
 }
-
-void servosToMin()
-{
-  for(int i = 0; i < 4; i++) {
-    hip.setPWM(i, 0, hipMins[i]);
-    shoulder.setPWM(i, 0, shoulderMins[i]);
-    elbow.setPWM(i, 0, elbowMins[i]);
-  }
-}
-
-void servosToMax()
-{
-  for(int i = 0; i < 4; i++) {
-    hip.setPWM(i, 0, hipMaxes[i]);
-    shoulder.setPWM(i, 0, shoulderMaxes[i]);
-    elbow.setPWM(i, 0, elbowMaxes[i]);
-  }
-}
-
-#define SERVOS_TO_HOME true
-#define SERVOS_TO_MIN false
-#define SERVOS_TO_MAX false
 
 void setup() {
   Serial.begin(115200);
@@ -112,19 +100,9 @@ void setup() {
   shoulder.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
   elbow.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 
-  yield();
-
-  #if SERVOS_TO_HOME
-  servosToHome();
-  #endif
-
-  #if SERVOS_TO_MIN
-  servosToMin();
-  #endif
-
-  #if SERVOS_TO_MAX
-  servosToMax();
-  #endif
+  hipsToHome();
+  shouldersToHome();
+  elbowsToHome();
 }
 
 /*
