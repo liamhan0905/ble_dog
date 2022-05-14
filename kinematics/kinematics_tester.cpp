@@ -374,7 +374,17 @@ class DogKinematics
         foot_y << front_right_foot_y, front_left_foot_y, rear_right_foot_y, rear_left_foot_y;
         foot_z << front_right_foot_z, front_left_foot_z, rear_right_foot_z, rear_left_foot_z;
 
+        // Creating vecctor that's just positive in the xhat0 direction, since I'm blanking on the given value for it
+        Matrix<float, 3, 1> x_direction;
+        x_direction << 1, 0, 0;
 
+        // Creating vector that's positive in the y direction
+        Matrix<float, 3, 1> y_direction;
+        y_direction << 0, 1, 0;
+
+        // Creating vector that's positive in the z direction
+        Matrix<float, 3, 1> z_direction;
+        z_direction << 0, 0, 1;
 
         // Iterating through each leg
         for (int leg_iterator = 0; leg_iterator < 4; leg_iterator++)
@@ -382,22 +392,15 @@ class DogKinematics
             // Establishing the translation vector from framne {0} to frame {4}; this changes as you iterate through legs 1 through 4
             Vector3f p_0_4(foot_x[leg_iterator], foot_y[leg_iterator], foot_z[leg_iterator]);
             // Establishing the magnitude of p_0_4
+            Matrix<float, 3, 1> p_0_4_prime;
+            p_0_4_prime << p_0_4(0), p_0_4(1), 0;
+
             float p_4_magnitude = p_0_4.norm();
 
-            // Creating vecctor that's just positive in the xhat0 direction, since I'm blanking on the given value for it
-            Matrix<float, 3, 1> horizontal_direction;
-            horizontal_direction << 1, 0, 0;
-
-            // Creating vector that's positive in the y direction
-            Matrix<float, 3, 1> y_direction;
-            y_direction << 0, 1, 0;
-
-            // Creating vector that's positive in the z direction
-            Matrix<float, 3, 1> z_direction;
-            z_direction << 0, 0, 1;
+            float p_4_magnitude_prime = p_0_4_prime.norm();
 
             float tau = sqrt(p_4_magnitude * p_4_magnitude - hip_length * hip_length);
-
+            float tau_prime = sqrt(p_4_magnitude_prime * p_4_magnitude_prime - hip_length * hip_length);
 
             // Creating u_vec and v_vec, two vectors defining the path from p1 to p3
             // v_vec can be calculated with Heron's Formula -- here 1/2 * base * height = () Heron's formula ),
@@ -405,7 +408,7 @@ class DogKinematics
             float s_heron = 0.5 * (shoulder_length + leg_length + tau);
             float v_vec_magnitude = (2 / tau) * sqrt( abs( s_heron * (s_heron - shoulder_length) * (s_heron - leg_length) * (s_heron - tau) ) );
 
-
+            //cout << "\nmagnitude of v_vec: " << v_vec_magnitude << endl;
 
             // u_vec can be found through its magnitude and direction. It's magnitude can be found through pythagorean's theorem with u_vec, v_vec, and shoulder_length
 
@@ -418,9 +421,9 @@ class DogKinematics
             float phi_angle = acos(acos_input_for_phi);
 
 
-            float alpha_angle = asin(tau / p_4_magnitude);
+            float alpha_angle = asin(tau_prime / p_4_magnitude_prime);
 
-            float beta_angle = acos(p_0_4.dot(horizontal_direction) / p_4_magnitude );
+            float beta_angle = acos(p_0_4_prime.dot(x_direction) / p_4_magnitude_prime);
 
             // Changing angle values
 
@@ -431,33 +434,66 @@ class DogKinematics
             //    ----.----
             //     3  |  4
 
+    
+            /*
             if (foot_x[leg_iterator] <= 0 && foot_y[leg_iterator] <= 0)
             {
                 // We're in the lower left quadrant, quadrant 3
                 theta_list[0 + 3 * leg_iterator] = PI - alpha_angle - beta_angle;
+                
+                if (leg_iterator == 0)
+                {
+                    cout << "\nTheta 0 quad 3: " << theta_list[0 + 3 * leg_iterator] << endl;
+                }
+
             }
             else if (foot_x[leg_iterator] <= 0 && foot_y[leg_iterator] > 0)
             {
+
+
                 // We're in the upper left quadrant, quadrant 2
                 theta_list[0 + 3 * leg_iterator] = alpha_angle + (PI - beta_angle);
+
+
+
+                if (leg_iterator == 0)
+                {
+                    cout << "\nTheta 0 quad 2: " << theta_list[0 + 3 * leg_iterator] << endl;
+                }
+
+
             }
             else if (foot_x[leg_iterator] > 0 && foot_y[leg_iterator] > 0)
             {
                 // We're in the upper right quadrant, quadrant 1
                 theta_list[0 + 3 * leg_iterator] = alpha_angle + (PI - beta_angle);
+            
+                if (leg_iterator == 0)
+                {
+                    cout << "\nTheta 0 quad 1: " << theta_list[0 + 3 * leg_iterator] << endl;
+                }
+            
+            
             }
             else
             {
                 // We're in the lower right quadrant, quadrant 4
                 theta_list[0 + 3 * leg_iterator] = PI - alpha_angle - beta_angle;
-            }
 
+                if (leg_iterator == 0)
+                {
+                    cout << "\nTheta 0 quad 4: " << theta_list[0 + 3 * leg_iterator] << endl;
+                }
+            }
+            */
+
+            theta_list[0 + 3 * leg_iterator] = (alpha_angle + beta_angle - M_PI ) * (p_0_4(1) / abs( p_0_4(1) ) );
 
 
             Matrix<float, 3, 1> p_0_1;
             p_0_1 << -hip_length * cos( theta_list[0 + 3 * leg_iterator] ), -hip_length * sin( theta_list[0 + 3 * leg_iterator] ), 0;
 
-            cout << "\np_0_1:\n" << p_0_1 << endl;
+
 
             Matrix<float, 3, 1> u_vec;
             //float p_to_u_factor = u_vec_magnitude / p_4_magnitude; -- this was for the previuus formulation of u_vec, which said that u_vec and p_0_4 point in
@@ -465,6 +501,9 @@ class DogKinematics
             float p_to_u_factor = u_vec_magnitude / tau; 
 
             u_vec = p_to_u_factor * (p_0_4 - p_0_1);
+
+            // reassigning u_vec_magnitude?
+            u_vec_magnitude = u_vec.norm();
 
             Matrix<float, 3, 1> v_vec;
             v_vec = v_vec_magnitude * u_vec.cross(p_0_1);
@@ -474,7 +513,7 @@ class DogKinematics
             p_0_3 = p_0_1 + u_vec + v_vec;
             float p_3_magnitude = p_0_3.norm();
 
-            /*
+            
             if (leg_iterator == 0)
             {
                 cout << "p_0_1:\n"
@@ -483,24 +522,64 @@ class DogKinematics
                      << v_vec << endl;
 
                 cout << "p_0_3:\n"
-                     << p_0_3 << "\n p_3 - p_1 dotted with u_vec"
-                     << (p_0_3-p_0_1).dot(u_vec) << "\nu_vec_magnitude * shoulder_length:\n"
+                     << p_0_3 
+                     << "\np_3 - p_1\n" 
+                     << p_0_3 - p_0_1
+                     << "\n p_3 - p_1 dotted with u_vec\n"
+                     << (p_0_3-p_0_1).dot(u_vec) 
+                     << "\n u_vec + v_vec dotted with u_vec\n"
+                     << (u_vec + v_vec).dot(u_vec)
+                     << "\nu_vec_magnitude * shoulder_length:\n"
                      << u_vec_magnitude * shoulder_length << endl;
 
                 cout << "\natan2(v_vec, u_vec):\n"
                      << atan2(v_vec_magnitude, u_vec_magnitude) << endl;
 
-                cout << "poop: " << sqrt(u_vec_magnitude * u_vec_magnitude + v_vec_magnitude * v_vec_magnitude) << endl;
+                cout << "\nTesting to see if tau is the same as the magnitude of p_4 - p_1\n" 
+                     << "\ntau\n" 
+                     << tau 
+                     << "\n magnitude of p_4 - p_1\n"
+                     << (p_0_4 - p_0_1).norm() << endl;
+
             }
-            */
+            
 
-            //theta_list[1 + 3 * leg_iterator] = acos( (p_0_3 - p_0_1).dot(-y_direction) / p_3_magnitude );
-
-            theta_list[1 + 3 * leg_iterator] = acos( (float)(p_0_3 - p_0_1).dot(u_vec) / (shoulder_length * u_vec_magnitude) );
-
-
+            // Create a storage variable for theta 3, such that you can compare the error between new and old theta values
+            float leg_angle_error_tolerance = 0.000001;
 
             theta_list[2 + 3 * leg_iterator] = M_PI - phi_angle;
+
+            
+            // Angles to help calculate theta 2
+            float gamma_angle;
+            float xhi_angle;
+
+
+        
+            // Generating cross product of z_direction and p_0_1
+            Matrix<float, 3, 1> zhat_cros_p1;
+            zhat_cros_p1 = z_direction.cross(p_0_1);
+            float zhat_cros_p1_magnitude = zhat_cros_p1.norm();
+
+
+            gamma_angle = acos( (float)(p_0_4 - p_0_1).dot(zhat_cros_p1) / (tau * zhat_cros_p1_magnitude) );
+
+            
+            xhi_angle = acos((float)(p_0_3 - p_0_1).dot(u_vec) / (shoulder_length * u_vec_magnitude));
+            
+            theta_list[1 + 3 * leg_iterator] = gamma_angle - xhi_angle;
+
+
+            if (leg_iterator == 0)
+            {
+
+                cout << "\ngamma_angle: " << gamma_angle << endl;
+                cout << "\nxhi_angle: " << xhi_angle << endl;
+
+                cout << "\nTheta 2: " << theta_list[1 + 3*leg_iterator] << endl;
+            }
+
+
 
 
 
@@ -626,7 +705,7 @@ int main()
     */
 
     // Initial condition -- joint angles all 0
-    doggo_1.theta_list << M_PI / 2, M_PI / 4, 3 * M_PI / 8, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
+    doggo_1.theta_list << M_PI / 2, M_PI / 2, M_PI / 4, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f;
 
     // chassis to hip transforms
     doggo_1.transform_m_to_front_right_0 << 
