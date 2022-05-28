@@ -166,3 +166,62 @@ void DogKinematics::setThetaList(Matrix<float, 12, 1> theta_list_var)
 }
 
 ////////////////////////////////////////////////////////////////////////
+
+
+        // Body Transform T_sm -- brings you from the space frame into the frame that represents the chassis' center of mass
+        Matrix<float, 4, 4> transform_space_to_chassis;                 // << this needs to be slightly different -- should now be a matrix
+                                                                        //   representing a change to the body transform, ie a change to the origin
+                                                                        //   of the model
+
+        // function to take in desired change in chassis movement -- updates 4 foot transforms according to T_b inverse * T_m_4
+        // T_m_4 = T_m_o * T_0_4
+        void changeBodyTransform(Matrix<float, 4, 4> body_change);
+
+// Changes the transform of the chassis by changing the transforms of each of the legs to produce the desired motion indicated by body_change
+void DogKinematics::changeBodyTransform(Matrix<float, 4, 4> body_change)
+{
+
+
+    transform_space_to_chassis *= body_change;
+
+    Matrix<float, 4, 4> dumm_mat;
+    dumm_mat = transform_space_to_chassis *transform_m_to_front_right_0;
+
+    trans_front_right_0_4 = transform_m_to_front_right_0.inverse() * body_change.inverse() * transform_m_to_front_right_0 * trans_front_right_0_4;
+    trans_front_left_0_4 = transform_m_to_front_left_0.inverse() * body_change.inverse() * transform_m_to_front_left_0 * trans_front_left_0_4;
+    trans_rear_right_0_4 = transform_m_to_rear_right_0.inverse() * body_change.inverse() * transform_m_to_rear_right_0 * trans_rear_right_0_4;
+    trans_rear_left_0_4 = transform_m_to_rear_left_0.inverse() * body_change.inverse() * transform_m_to_rear_left_0 * trans_rear_left_0_4;
+
+
+
+
+    // THEN call inverse kinematics to update theta_list
+}
+
+
+////////////////////////////////////////////////////////////////////////
+
+
+
+        void calculateBodyTransform(float chassis_x_position, float chassis_y_position, float chassis_z_position, float x_axis_rotation, float y_axis_rotation, float z_axis_rotation);
+
+
+
+
+// Define a new function that helps calcualte the foot transforms relative to the {0} frame, which is necessary for inverse kinematics
+// This is T_sm in my notes, the transform of the body's center of mass relative to the space frame
+void DogKinematics::calculateBodyTransform(float chassis_x_position, float chassis_y_position, float chassis_z_position, float x_axis_rotation, float y_axis_rotation, float z_axis_rotation)
+{
+    Matrix<float, 3, 3> rotation;
+    Matrix<float, 3, 1> translation;
+
+    rotation = AngleAxisf(x_axis_rotation, Vector3f::UnitX()) * AngleAxisf(y_axis_rotation, Vector3f::UnitY()) * AngleAxisf(z_axis_rotation, Vector3f::UnitZ());
+
+    translation << chassis_x_position, chassis_y_position, chassis_z_position;
+
+    transform_body = makeTransformMatrix(rotation, translation);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
