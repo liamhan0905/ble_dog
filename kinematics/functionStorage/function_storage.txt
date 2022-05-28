@@ -1,0 +1,168 @@
+    // chassis to hip transforms
+    
+    /*
+    doggo_1.transform_m_to_front_right_0 << cos(PI / 2), 0, sin(PI / 2), doggo_1.robot_length / 2,
+        0, 1, 0, 0,
+        -sin(PI / 2), 0, cos(PI / 2), doggo_1.robot_width / 2,
+        0, 0, 0, 1;
+    
+
+
+    doggo_1.transform_m_to_front_left_0 << cos(-PI / 2), 0, sin(-PI / 2), doggo_1.robot_length / 2,
+        0, 1, 0, 0,
+        -sin(-PI / 2), 0, cos(-PI / 2), -doggo_1.robot_width / 2,
+        0, 0, 0, 1;
+
+    doggo_1.transform_m_to_rear_right_0 << cos(PI / 2), 0, sin(PI / 2), -doggo_1.robot_length / 2,
+        0, 1, 0, 0,
+        -sin(PI / 2), 0, cos(PI / 2), doggo_1.robot_width / 2,
+        0, 0, 0, 1;
+
+    doggo_1.transform_m_to_rear_left_0 << cos(-PI / 2), 0, sin(-PI / 2), -doggo_1.robot_length / 2,
+        0, 1, 0, 0,
+        -sin(-PI / 2), 0, cos(-PI / 2), -doggo_1.robot_width / 2,
+        0, 0, 0, 1;
+
+    */
+
+////////////////////////////////////////////////////////////////////////
+
+calculateDesiredFootTransformsFrame0 function
+
+Declaration
+void calculateDesiredFootTransformsFrame0(Matrix<float, 4, 4> front_right_desired_foot_transform,
+                                    Matrix<float, 4, 4> front_left_desired_foot_transform,
+                                    Matrix<float, 4, 4> rear_right_desired_foot_transform,
+                                    Matrix<float, 4, 4> rear_left_desired_foot_transform);
+
+Implementation
+// not sure if I should keep this function
+// Function that translates the reference frame of a desired target position from the {s} frame into the {0} frame, so that inverse kinematics
+//   can be performed using the calculateInverseKinematics function
+void DogKinematics::calculateDesiredFootTransformsFrame0(Matrix<float, 4, 4> front_right_desired_foot_transform,
+                                          Matrix<float, 4, 4> front_left_desired_foot_transform,
+                                          Matrix<float, 4, 4> rear_right_desired_foot_transform,
+                                          Matrix<float, 4, 4> rear_left_desired_foot_transform)
+{
+    trans_front_right_0_4 = transform_m_to_front_right_0.inverse() * transform_space_to_chassis.inverse() * front_right_desired_foot_transform;
+    trans_front_left_0_4 = transform_m_to_front_left_0.inverse() * transform_space_to_chassis.inverse() * front_left_desired_foot_transform;
+    trans_rear_right_0_4 = transform_m_to_rear_right_0.inverse() * transform_space_to_chassis.inverse() * rear_right_desired_foot_transform;
+    trans_rear_left_0_4 = transform_m_to_rear_left_0.inverse() * transform_space_to_chassis.inverse() * rear_left_desired_foot_transform;
+
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+
+
+    // *** Testing FK and IK *** // 
+
+    doggo_1.calculateForwardKinematics(doggo_1.theta_list);
+
+    cout << "Foot kjvbdkfv sk\n" << doggo_1.trans_front_right_0_4 << endl;
+    cout << "Transform from m to 4 thjrough 0 jshgfjhbfd\n" << doggo_1.transform_m_to_front_right_0 * doggo_1.trans_front_right_0_4 << endl;
+
+    cout << "Calculating and returning the Chassis Transform: " << endl;
+
+    float chassis_x_position, chassis_y_position, chassis_z_position, x_axis_rotation, y_axis_rotation, z_axis_rotation;
+    
+    chassis_x_position = 0.0f;
+    chassis_y_position = 0.0f;
+    chassis_z_position = 0.0f;
+    x_axis_rotation = 0.0f;
+    y_axis_rotation = 0.0f;
+    z_axis_rotation = 0.0f;
+
+    doggo_1.calculateBodyTransform(chassis_x_position, chassis_y_position, chassis_z_position, x_axis_rotation, y_axis_rotation, z_axis_rotation);
+
+    cout << "The transform from the space frame to the center of mass of the chassis is:\n" << doggo_1.getBodyTransform() << endl;
+
+    cout << "The transform from the center of mass of the chassis to frame {0} is :\n" << doggo_1.transform_m_to_front_right_0 << endl;
+
+    Matrix<float, 4, 4> trans_desired_front_right_s_4;
+    Matrix<float, 4, 4> trans_desired_front_left_s_4;
+    Matrix<float, 4, 4> trans_desired_rear_right_s_4;
+    Matrix<float, 4, 4> trans_desired_rear_left_s_4;
+
+    trans_desired_front_right_s_4 << 0, 1, 0, 0.5,
+        -1, 0, 0, -0.4,
+        0, 0, 1, 0.6,
+        0, 0, 0, 1;
+
+    trans_desired_front_left_s_4 << cos(PI / 2), 0, sin(PI / 2), 0.3,
+        0, 1, 0, 0.4,
+        -sin(PI / 2), 0, cos(PI / 2), 0.5,
+        0, 0, 0, 1;
+
+    trans_desired_rear_right_s_4 << cos(PI / 2), 0, sin(PI / 2), 0.7,
+        0, 1, 0, 0.6,
+        -sin(PI / 2), 0, cos(PI / 2), 0.5,
+        0, 0, 0, 1;
+
+    trans_desired_rear_left_s_4 << cos(PI / 2), 0, sin(PI / 2), 0.3,
+        0, 1, 0, 0.4,
+        -sin(PI / 2), 0, cos(PI / 2), 0.5,
+        0, 0, 0, 1;
+
+    /*
+    doggo_1.transform_m_to_front_right_0 << cos(PI / 2), 0, sin(PI / 2), doggo_1.robot_length / 2,
+        0, 1, 0, 0,
+        -sin(PI / 2), 0, cos(PI / 2), doggo_1.robot_width / 2,
+        0, 0, 0, 1;
+    */
+
+    // This populates the transforms bringing you from frame {0} to frame {4}, using your desired {s} --> {4} transforms
+    doggo_1.calculateDesiredFootTransformsFrame0(trans_desired_front_right_s_4, trans_desired_front_left_s_4, trans_desired_rear_right_s_4, trans_desired_rear_left_s_4);
+
+    first_foot_transform = doggo_1.trans_front_right_0_4;
+
+    cout << "First Front Right Foot Transform is:\n" << first_foot_transform << endl;
+
+    doggo_1.calculateInverseKinematics(doggo_1.trans_front_right_0_4, doggo_1.trans_front_left_0_4, doggo_1.trans_rear_right_0_4, doggo_1.trans_rear_left_0_4);
+
+    cout << "Current theta_list:\n"
+         << doggo_1.theta_list << endl;
+
+    doggo_1.calculateForwardKinematics(doggo_1.theta_list);
+
+    second_foot_transform = doggo_1.trans_front_right_0_4;
+
+    cout << "Second Front Right Foot Transform is:\n" << second_foot_transform << endl;
+
+    cout << "Error between transforms is:\n" << second_foot_transform - first_foot_transform << endl;
+
+
+
+////////////////////////////////////////////////////////////////////////
+
+    Old constructor for DogKinematics
+
+    /*
+    DogKinematics(float robot_length, float robot_width, float hip_length, float shoulder_length, float leg_length)
+    {
+        robot_length = robot_length;
+        robot_width = robot_width;
+        hip_length = hip_length;
+        shoulder_length = shoulder_length;
+        leg_length = leg_length;
+
+        cout << "robot_length: " << robot_length << "\nrobot_width: " << robot_width << "\nhip_length: " << hip_length << "\nshoulder_length: " << shoulder_length << "\nleg_length: " << leg_length << endl;
+    }
+    */
+
+////////////////////////////////////////////////////////////////////////
+
+    Old definition for setting theta_list -- not necessary since constructor should handle it, and movement is done with feet or body in mind, not joint angles
+
+        void setThetaList(Matrix<float, 12, 1> theta_list_var);
+
+Old Implementation of setting theta_list
+void DogKinematics::setThetaList(Matrix<float, 12, 1> theta_list_var)
+{
+    theta_list = theta_list_var;
+    calculateForwardKinematics(theta_list);
+    // Call function to update {m} frame
+}
+
+////////////////////////////////////////////////////////////////////////
