@@ -31,8 +31,9 @@ class DogPathing
 {
     public:
         DogPathing();
-        Matrix<float, Dynamic, 12> createJointTrajectory(Matrix<float, 12, 1> theta_list_start, Matrix<float, 12, 1> theta_list_end, float total_motion_time, int number_descrete_points, int time_scaling_method);
-        void createScrewTrajectory();
+        Matrix<float, Dynamic, 12> createFullJointTrajectory(Matrix<float, 12, 1> theta_list_start, Matrix<float, 12, 1> theta_list_end, float total_motion_time, int number_descrete_points, int time_scaling_method);
+        Matrix<float, Dynamic, 3> createLegJointTrajectory(Matrix<float, 3, 1> theta_list_start, Matrix<float, 3, 1> theta_list_end, float total_motion_time, int number_descrete_points, int time_scaling_method);
+        Matrix<float, 4, 4> createScrewTrajectory(Matrix<float, 4, 4> start_configuration, Matrix<float, 4, 4> end_configuration, float total_motion_time, int number_descrete_points, int time_scaling_method);
         void createCartesianTrajectory();
 
         float cubicTimeScaling(float total_motion_time, float current_time);
@@ -47,7 +48,7 @@ DogPathing::DogPathing()
  
 }
 
-Matrix<float, Dynamic, 12> DogPathing::createJointTrajectory(Matrix<float, 12, 1> theta_list_start, Matrix<float, 12, 1> theta_list_end, float total_motion_time, int number_descrete_points, int time_scaling_method)
+Matrix<float, Dynamic, 12> DogPathing::createFullJointTrajectory(Matrix<float, 12, 1> theta_list_start, Matrix<float, 12, 1> theta_list_end, float total_motion_time, int number_descrete_points, int time_scaling_method)
 {
     // Allocates space for a matrix with rows = number_discrete_points, and collumns = 12
     // Each row should have 12 elements corresponding to the 12 joint angles of the robot, from theta_list_start to theta_list_end
@@ -63,7 +64,7 @@ Matrix<float, Dynamic, 12> DogPathing::createJointTrajectory(Matrix<float, 12, 1
         switch (time_scaling_method)
         {
         case 3:             // Cubic Time Scaling
-            //
+            path_parameter = cubicTimeScaling(total_motion_time, time_gap * i);
             break;
         case 5:             // Quintic Time Scaling
             path_parameter = quinticTimeScaling(total_motion_time, time_gap * i);
@@ -87,9 +88,64 @@ Matrix<float, Dynamic, 12> DogPathing::createJointTrajectory(Matrix<float, 12, 1
 
 }
 
-void DogPathing::createScrewTrajectory()
+Matrix<float, Dynamic, 3> DogPathing::createLegJointTrajectory(Matrix<float, 3, 1> theta_list_start, Matrix<float, 3, 1> theta_list_end, float total_motion_time, int number_descrete_points, int time_scaling_method)
 {
 
+    // Allocates space for a matrix with rows = number_discrete_points, and collumns = 3
+    // Each row should have 3 elements corresponding to the 3 joint angles of one of the robot's arms, from theta_list_start to theta_list_end
+    MatrixXf joint_traj(number_descrete_points, 3);
+
+    float time_gap = total_motion_time / (number_descrete_points - 1);
+
+    float path_parameter;
+
+    // Iterate through all points in desired trajectory, indicated by number_descrete_points
+    for (int i = 0; i < number_descrete_points; i++)
+    {
+        switch (time_scaling_method)
+        {
+        case 3: // Cubic Time Scaling
+            path_parameter = cubicTimeScaling(total_motion_time, time_gap * i);
+            break;
+        case 5: // Quintic Time Scaling
+            path_parameter = quinticTimeScaling(total_motion_time, time_gap * i);
+            break;
+
+        default:
+            cout << "Not a supported time scaling" << endl;
+            break;
+        }
+
+        //   traj(:, i) = thetastart + s * (thetaend - thetastart);
+        //
+        for (int j = 0; j < theta_list_start.rows(); j++)
+        {
+            joint_traj(i, j) = theta_list_start[j] + path_parameter * (theta_list_end[j] - theta_list_start[j]);
+        }
+    }
+
+    return joint_traj;
+}
+
+Matrix<float, 4, 4> DogPathing::createScrewTrajectory(Matrix<float, 4, 4> start_configuration, Matrix<float, 4, 4> end_configuration, float total_motion_time, int number_descrete_points, int time_scaling_method)
+{
+    Matrix<float, 4, 4> configuration_screw_trajectory;
+
+    /*
+    % Takes Xstart: The initial end-effector configuration,
+    %       Xend: The final end-effector configuration,
+    %       Tf: Total time of the motion in seconds from rest to rest,
+    %       N: The number of points N > 1 (Start and stop) in the discrete
+    %          representation of the trajectory,
+    %       method: The time-scaling method, where 3 indicates cubic
+    %               (third-order polynomial) time scaling and 5 indicates
+    %               quintic (fifth-order polynomial) time scaling.
+    % Returns traj: The discretized trajectory as a list of N matrices in SE(3)
+    %               separated in time by Tf/(N-1). The first in the list is
+    %               Xstart and the Nth is Xend .
+    */
+
+    return configuration_screw_trajectory;
 }
 
 void DogPathing::createCartesianTrajectory()
@@ -131,9 +187,26 @@ int main()
     current_joint << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     target_joint << 1, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0;
 
-    dummy_traj = dummy_path.createJointTrajectory(current_joint, target_joint, final_time, traj_point_num, scaling_type);
+    dummy_traj = dummy_path.createFullJointTrajectory(current_joint, target_joint, final_time, traj_point_num, scaling_type);
 
     cout << "Traj:\n" << dummy_traj << endl;
+
+    /////////////
+
+    Matrix<float, Dynamic, 3> dummy_traj_second;
+    Matrix<float, 3, 1> current_joint_second;
+    Matrix<float, 3, 1> target_joint_second;
+
+    current_joint_second << 0, 0, 0;
+    target_joint_second << M_PI, 0.5 * M_PI, 0;
+
+    dummy_traj_second = dummy_path.createLegJointTrajectory(current_joint_second, target_joint_second, final_time, traj_point_num, scaling_type);
+
+    cout << "Second Traj:\n" << dummy_traj_second << endl;
+
+    /////////////
+
+
 
     return 0;
 }
