@@ -521,37 +521,6 @@ void DogKinematics::calculateInverseKinematics(Matrix<float, 4, 4> front_right_f
         p_0_3 = p_0_1 + u_vec + v_vec;
         float p_3_magnitude = p_0_3.norm();
 
-        /*
-        if (leg_iterator == 0)
-        {
-            cout << "p_0_1:\n"
-                << p_0_1 << "\nu_vec:\n"
-                << u_vec << "\nv_vec:\n"
-                << v_vec << endl;
-
-            cout << "p_0_3:\n"
-                << p_0_3
-                << "\np_3 - p_1\n"
-                << p_0_3 - p_0_1
-                << "\n p_3 - p_1 dotted with u_vec\n"
-                << (p_0_3-p_0_1).dot(u_vec)
-                << "\n u_vec + v_vec dotted with u_vec\n"
-                << (u_vec + v_vec).dot(u_vec)
-                << "\nu_vec_magnitude * shoulder_length:\n"
-                << u_vec_magnitude * shoulder_length << endl;
-
-            cout << "\natan2(v_vec, u_vec):\n"
-                << atan2(v_vec_magnitude, u_vec_magnitude) << endl;
-
-            cout << "\nTesting to see if tau is the same as the magnitude of p_4 - p_1\n"
-                << "\ntau\n"
-                << tau
-                << "\n magnitude of p_4 - p_1\n"
-                << (p_0_4 - p_0_1).norm() << endl;
-
-        }
-        */
-
         // Create a storage variable for theta 3, such that you can compare the error between new and old theta values
         float leg_angle_error_tolerance = 0.000001;
 
@@ -571,18 +540,6 @@ void DogKinematics::calculateInverseKinematics(Matrix<float, 4, 4> front_right_f
         xhi_angle = acos((float)(p_0_3 - p_0_1).dot(u_vec) / (shoulder_length * u_vec_magnitude));
 
         theta_list[1 + 3 * leg_iterator] = gamma_angle - xhi_angle;
-
-        /*
-        if (leg_iterator == 0)
-        {
-
-            cout << "\ngamma_angle: " << gamma_angle << endl;
-            cout << "\nxhi_angle: " << xhi_angle << endl;
-
-            cout << "\nTheta 2: " << theta_list[1 + 3*leg_iterator] << endl;
-        }
-
-        */
     }
 
     cout << "I did IK!" << endl;
