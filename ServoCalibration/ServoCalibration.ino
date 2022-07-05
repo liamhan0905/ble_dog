@@ -17,7 +17,8 @@
  ****************************************************/
 
 #include <Wire.h>
-#include <Adafruit_PWMServoDriver.h>
+//#include <Adafruit_PWMServoDriver.h>
+#include "Adafruit_PWMServoDriver.h"
 
 // called this way, it uses the default address 0x40
 Adafruit_PWMServoDriver hip;
@@ -126,6 +127,18 @@ void setServoPulse(uint8_t n, double pulse) {
 void loop() {
 
   delay(3000);
+
+  /*
+  for(float a = 0.0; a < 1.0; a+=0.01)
+  {
+    elbow.setPWM(1, 0, int(float(elbowMins[1])*a + float(elbowCenters[1])*(1.0 - a)));
+    Serial.println(a);
+  }
+  Serial.println("working?");
+  */
+
+
+  
   /*
   for(float a = 0.0; a < 1.0; a += 0.01) {
     for(int i = 0; i < 4; i++) {
