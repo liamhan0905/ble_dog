@@ -148,7 +148,7 @@ vector<Matrix<float, 4, 4> > DogPathing::createScrewTrajectory(Matrix<float, 4, 
     if (number_descrete_points <= 0)
     {
         cout << "Not enough points in trajectory, please choose a number of points greater than 0" << endl;
-        return;
+        return configuration_screw_trajectory;
     }
 
     float time_gap = total_motion_time / (number_descrete_points - 1);
@@ -320,7 +320,7 @@ int main()
 
     int scaling_type = 5;
     float final_time = 10.0;
-    int traj_point_num = 2;
+    int traj_point_num = 4;
 
     /////////////
 
