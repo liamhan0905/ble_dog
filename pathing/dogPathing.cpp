@@ -5,6 +5,9 @@
 
 // more references for eigen -- https://aleksandarhaber.com/starting-with-eigen-c-matrix-library/
 
+#include "dogPathing.h"
+
+
 #include <iostream>
 #include <string>
 #include <stdio.h> /* printf */
@@ -25,9 +28,12 @@ using namespace Eigen;
 
 using namespace std;
 
+
 // Currently this class makes trajectories that are X by 12, and so each individual row is a 1 by 12 matrix
 // This is different than how the other class has its joint matrix -- it uses a 12 by 1 matrix
 // I like the appearance of X rows of 1 by 12s, but I should be consistent with the rest of my code
+
+/*
 class DogPathing
 {
     public:
@@ -50,6 +56,8 @@ class DogPathing
     private:
 
 };
+
+*/
 
 DogPathing::DogPathing()
 {
@@ -313,7 +321,7 @@ float DogPathing::quinticTimeScaling(float total_motion_time, float current_time
 }
 //// End of Time Scaling Functions ////
 
-
+/*
 int main()
 {
     DogPathing dummy_path;
@@ -346,3 +354,4 @@ int main()
 
     return 0;
 }
+*/
