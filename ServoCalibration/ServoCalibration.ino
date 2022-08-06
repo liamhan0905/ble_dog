@@ -1,3 +1,11 @@
+//#include <math.h>
+
+#include <dogKinematicsArduino.h>
+
+//#include <ArduinoEigenDense.h>
+//#include <ArduinoEigen.h>
+//#include <ArduinoEigenSparse.h>
+
 /*************************************************** 
   This is an example for our Adafruit 16-channel PWM & Servo driver
   Servo test - this will drive 16 servos, one after the other
@@ -16,13 +24,23 @@
   BSD license, all text above must be included in any redistribution
  ****************************************************/
 
+
+
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
+
+//#include <ArduinoEigen.h>
+//#include <Eigen.h>
+
+
+//#include <dogKinematicsArduino.h>
+
 // called this way, it uses the default address 0x40
-Adafruit_PWMServoDriver hip;
-Adafruit_PWMServoDriver shoulder(0x41);
-Adafruit_PWMServoDriver elbow(0x42);
+Adafruit_PWMServoDriver dog;
+//Adafruit_PWMServoDriver hip;
+//Adafruit_PWMServoDriver shoulder;
+//Adafruit_PWMServoDriver elbow;
 // you can also call it with a different address you want
 //Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x41);
 
@@ -69,21 +87,21 @@ int elbowMaxes[] = {
 void hipsToHome()
 {
   for(int i = 0; i < 4; i++) {
-    hip.setPWM(i, 0, hipCenters[i]);
+    dog.setPWM(i, 0, hipCenters[i]);
   }
 }
 
 void shouldersToHome()
 {
-  for(int i = 0; i < 4; i++) {
-    shoulder.setPWM(i, 0, shoulderCenters[i]);
+  for(int i = 4; i < 8; i++) {
+    dog.setPWM(i, 0, shoulderCenters[i - 4]);
   }
 }
 
 void elbowsToHome()
 {
-  for(int i = 0; i < 4; i++) {
-    elbow.setPWM(i, 0, elbowCenters[i]);
+  for(int i = 8; i < 12; i++) {
+    dog.setPWM(i, 0, elbowCenters[i - 8]);
   }
 }
 
@@ -92,13 +110,15 @@ void setup() {
   while(!Serial);
   Serial.println("16 channel Servo test!");
 
-  hip.begin();
-  shoulder.begin();
-  elbow.begin();
-  
-  hip.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
-  shoulder.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
-  elbow.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+  dog.begin();
+  //hip.begin();
+  //shoulder.begin();
+  //elbow.begin();
+
+  dog.setPWMFreq(60);
+  //hip.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+  //shoulder.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+  //elbow.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 
   hipsToHome();
   shouldersToHome();
@@ -126,6 +146,40 @@ void setServoPulse(uint8_t n, double pulse) {
 void loop() {
 
   delay(3000);
+
+
+    
+  // Cool this works, I was able to specifically actuate on particular joint
+  for (float a = 0.0; a < 1.0; a+= 0.01)
+  {
+    dog.setPWM(9, 0, int(float(elbowMins[1])*a + float(elbowCenters[1])*(1.0 - a) ) );
+  }
+
+    delay(500);
+
+  for (float a = 0.0; a < 1.0; a+= 0.01)
+  {
+    dog.setPWM(9, 0, int(float(elbowCenters[1])*a + float(elbowMins[1])*(1.0 - a) ) );
+  }
+
+
+
+  
+  /*
+  for (float a = 0.0; a < 1.0; a+= 0.01)
+  {
+    dog.setPWM(9, 0, int(float(elbowMaxes[1])*a + float(elbowCenters[1])*(1.0 - a) ) );
+  }
+
+  for (float a = 0.0; a < 1.0; a+= 0.01)
+  {
+    dog.setPWM(9, 0, int(float(elbowCenters[1])*a + float(elbowMaxes[1])*(1.0 - a) ) );
+  }
+  */
+  
+  
+
+  
   /*
   for(float a = 0.0; a < 1.0; a += 0.01) {
     for(int i = 0; i < 4; i++) {

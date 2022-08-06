@@ -328,7 +328,7 @@ int main()
 
     int scaling_type = 5;
     float final_time = 10.0;
-    int traj_point_num = 2;
+    int traj_point_num = 4;
 
     /////////////
 
